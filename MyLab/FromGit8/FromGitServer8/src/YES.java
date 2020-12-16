@@ -1,0 +1,49 @@
+import Server.*;
+import Server.ConnectionWorker;
+import dragon.*;
+
+import work.CommandSelector;
+import work.JsonWorker;
+import work.Output;
+import work.commands.CommandDeserializer;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.NoSuchElementException;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+public class YES {
+    private static int port = 5575;
+
+    public static void main(String [] args){
+        try {
+            Server server = new Server(port, new CommandDeserializer());
+            DataBaseWorker dbw = new DataBaseWorker();
+            DataBaseWorker.start();
+            while (true) {
+                server.start();
+                Output output = ConnectionWorker.getOutput();
+
+                JsonWorker work = new JsonWorker();
+                CopyOnWriteArrayList<Dragon> dragonsSave = new CopyOnWriteArrayList<>(work.start());
+                CommandSelector commandSelector = new CommandSelector();
+                String command;
+                try {
+                    command = output.getCommand();
+                }catch (NullPointerException e){ command = "help";}
+
+                String answ = commandSelector.start(command, dragonsSave, output);
+                work.setIdFromPSQL(dragonsSave);
+                String dragonForClient = work.transformAll(command,dragonsSave);
+                ConnectionWorker.outputStarter(answ + "&" + dragonForClient);
+            }
+        } catch (NoSuchElementException e) {
+            System.out.println("Не ломайте нашу прогу плез в Main");
+        } catch (IOException e) {
+            System.out.println("Ошибка в Main классе");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}

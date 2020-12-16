@@ -1,0 +1,3 @@
+info
+help
+execute_script C:\Users\Vova\IdeaProjects\FromGit\commands.txt
